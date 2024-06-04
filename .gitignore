@@ -2,7 +2,7 @@
 .venv
 
 # env variable files
-.env
+.env*
 
 # Django
 *.log
@@ -19,3 +19,6 @@ media
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
+
+# PyCharm
+.idea

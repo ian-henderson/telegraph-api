@@ -10,44 +10,50 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import boto3
+
 from datetime import timedelta
-from dotenv import load_dotenv
-from os import getenv
+
+from os import getenv, path
 from pathlib import Path
-
-
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "INFO",
-    },
-}
-
-
-# Loads env variables
-load_dotenv(".env")
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(getenv("DEBUG", "False"))
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+ENV = getenv("ENV", "PROD").upper()
+is_dev = ENV == "DEV"
+is_unit_tests = ENV == "UNIT_TESTS"
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = is_dev
+
+if is_dev or is_unit_tests:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+            },
+        },
+        "root": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+    }
+else:
+    # handle prod logging
+    pass
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 SECRET_KEY = getenv("SECRET_KEY")
 
-
-ALLOWED_HOSTS = []
+# TODO: handle this with env vars
+ALLOWED_HOSTS = ["::1", "localhost"]
 
 
 # Application definition
@@ -57,11 +63,7 @@ ASGI_APPLICATION = "api.asgi.application"
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [
-                (getenv("REDIS_CHANNEL_LAYER_URL", "127.0.0.1"), 6379),
-            ],
-        },
+        "CONFIG": {"hosts": [("redis", "6379")]},
     }
 }
 
@@ -119,12 +121,24 @@ WSGI_APPLICATION = "api.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+if is_dev:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "HOST": getenv("DB_HOST", "postgres"),
+            "NAME": getenv("DB_NAME", "telegraph"),
+            "PASSWORD": getenv("DB_PASSWORD", "password"),
+            "PORT": getenv("DB_PORT", 5432),
+            "USER": getenv("DB_USER", "admin"),
+        }
     }
-}
+elif is_unit_tests:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation
@@ -150,11 +164,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_TZ = True
 
 
@@ -162,6 +173,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = path.join(BASE_DIR, "staticfiles")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -177,29 +189,25 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
 }
 
-# Email Settings
-# TODO: add these to env vars, dev/prod logic
-EMAIL_HOST = "localhost"
-EMAIL_PORT = "1025"
-EMAIL_HOST_USER = ""
-EMAIL_HOST_PASSWORD = ""
-EMAIL_USE_TLS = False
-# EMAIL_USE_SSL = False
+if is_dev:
+    EMAIL_HOST = "mailhog"
+    EMAIL_PORT = "1025"
+elif is_unit_tests:
+    pass
+# assume prod
+else:
+    # Django SES
+    EMAIL_BACKEND = "django_ses.SESBackend"
 
-# Django SES
-# EMAIL_BACKEND = "django_ses.SESBackend"
-
-# These are optional -- if they're set as environment variables they won't
-# need to be set here as well
+# AWS, Boto3
+boto3_session = boto3.Session(region_name=getenv("AWS_REGION"))
 AWS_ACCESS_KEY_ID = getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = getenv("AWS_SECRET_ACCESS_KEY")
+AWS_REGION = getenv("AWS_REGION")
 
-# Additionally, if you are not using the default AWS region of us-east-1,
-# you need to specify a region, like so:
-AWS_SES_REGION_NAME = getenv("AWS_SES_REGION_NAME")
+AWS_SES_REGION_NAME = getenv("AWS_REGION", "us-east-1")
 AWS_SES_REGION_ENDPOINT = getenv("AWS_SES_REGION_ENDPOINT")
 
-# maybe have longer lifetimes for dev, shorter for prod?
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=365),

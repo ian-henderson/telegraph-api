@@ -9,10 +9,12 @@ class Command(createsuperuser.Command):
                 self.stdout.write("Enter a username.")
                 user_input = input(message).strip()
             return user_input
+
         return super().get_input_data(field, message, default)
 
     def handle(self, *args, **options):
         options["email"] = options.get("email")
+
         options["username"] = self.get_input_data(
             "username", message="Username: ", default=options.get("username")
         )

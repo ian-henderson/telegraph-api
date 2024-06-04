@@ -1,13 +1,15 @@
+import logging
+
 from base64 import urlsafe_b64decode, urlsafe_b64encode
-import boto3
 from botocore.exceptions import ClientError
 from cryptography.fernet import Fernet
-import logging
 from os import getenv
+
+from api.settings import boto3_session
 
 
 class KmsClient:
-    client = boto3.client("kms")
+    client = boto3_session.client("kms")
 
     def __init__(self):
         self.current_data_key = self.get_data_key()

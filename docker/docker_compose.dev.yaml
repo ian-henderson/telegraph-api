@@ -1,0 +1,39 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000 --noreload
+    depends_on:
+      - mailhog
+      - postgres
+      - redis
+    develop:
+      watch:
+        - action: sync+restart
+          path: ../app
+          target: /app
+    env_file:
+      - ../.env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    volumes:
+      - ./entrypoint.sh:/app/entrypoint.sh
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "8025:8025"
+    restart: unless-stopped
+
+  postgres:
+    environment:
+      POSTGRES_DB: telegraph
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: admin
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    shm_size: 128mb

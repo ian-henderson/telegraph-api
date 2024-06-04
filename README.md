@@ -1,9 +1,48 @@
-# telegraph
+# telegraph-api
 
-## libs
+## Run locally
 
-- [Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
-- [Django Channels](https://channels.readthedocs.io/en/latest)
-- [Django REST framework](https://www.django-rest-framework.org)
-- [Django-SES](https://github.com/django-ses/django-ses)
-- [Simple JWT](https://django-rest-framework-simplejwt.readthedocs.io/en/latest)
+### Requirements
+
+- docker, docker compose
+
+### Env var file
+
+The .env file should be located in the root/top directory of the project:
+
+```bash
+telegraph-api
+├── app
+├── docker-compose.dev.yaml
+├── docker-compose.prod.yaml
+├── docker-compose.yaml
+├── Dockerfile
+├── entrypoint.sh
+├── README.md
+├── run-docker-compose.dev.sh
+├── run-docker-compose.prod.sh
+└── .env
+```
+
+The DB env variables are determined by the docker-compose set up.
+
+.env:
+
+```bash
+DB_HOST="postgres"
+DB_NAME="telegraph"
+DB_PASSWORD="password"
+DB_PORT="5432"
+DB_USER="admin"
+```
+
+## Docker Containers
+
+- [redis](https://hub.docker.com/_/redis)
+
+### Dev Environment
+
+- [mailhog](https://hub.docker.com/r/mailhog/mailhog)
+- [postres](https://hub.docker.com/_/postgres)
+
+### Prod Environment

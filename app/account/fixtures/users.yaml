@@ -1,0 +1,11 @@
+- model: account.User
+  pk: 1
+  fields:
+    date_joined: "2023-06-01T00:00:00Z"
+    email: "admin@admin.com"
+    is_active: true
+    is_staff: true
+    is_superuser: true
+    last_login: "2023-06-02T12:00:00Z"
+    password: "pbkdf2_sha256$720000$lr2DwvItSBmQct6OtFevAK$G4EwIFlvQYJXqj0uMUXYeAzjdf4dlb7MTjeS47Fc1RA="
+    username: "admin"

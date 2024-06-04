@@ -1,0 +1,7 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.unit_tests
+    env_file:
+      - ../.env.unit_tests
